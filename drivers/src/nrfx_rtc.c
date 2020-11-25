@@ -281,6 +281,17 @@ static void irq_handler(NRF_RTC_Type * p_reg,
                         uint32_t       instance_id,
                         uint32_t       channel_count)
 {
+#if 1 // Fixed to use only the NRFX_RTC_INT_TICK interrupt. May be modified in the future.
+    nrf_rtc_event_t event = NRF_RTC_EVENT_TICK;
+    if (nrf_rtc_int_enable_check(p_reg, NRF_RTC_INT_TICK_MASK) && nrf_rtc_event_check(p_reg, event))
+    {
+        nrf_rtc_event_clear(p_reg, event);
+        NRFX_LOG_DEBUG("Event: %s, instance id: %lu.",
+                       EVT_TO_STR(event),
+                       (unsigned long)instance_id);
+        m_handlers[instance_id](NRFX_RTC_INT_TICK);
+    }
+#else
     uint32_t i;
     uint32_t int_mask = (uint32_t)NRF_RTC_INT_COMPARE0_MASK;
     nrf_rtc_event_t event = NRF_RTC_EVENT_COMPARE_0;
@@ -321,6 +332,7 @@ static void irq_handler(NRF_RTC_Type * p_reg,
                        (unsigned long)instance_id);
         m_handlers[instance_id](NRFX_RTC_INT_OVERFLOW);
     }
+#endif
 }
 
 #if NRFX_CHECK(NRFX_RTC0_ENABLED)
